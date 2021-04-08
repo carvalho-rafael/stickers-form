@@ -1,13 +1,14 @@
 import Head from 'next/head'
+import Form from '../components/form'
 
 export default function Home() {
   return (
-    <div>
+    <>
       <Head>
         <title>Formulário de Adesivos</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-    <div>Olar</div>
-    </div>
+      <Form/>
+    </>
   )
 }
