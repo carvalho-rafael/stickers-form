@@ -5,34 +5,35 @@ import InputMask from "react-input-mask";
 import Popup from '../popup';
 
 export default function Form() {
-  const nameInput = useRef<HTMLInputElement>(null);
+  const name = useRef<HTMLInputElement>(null);
+  const email = useRef<HTMLInputElement>(null);
+  const phone = useRef<HTMLInputElement>(null);
+  const addressZip = useRef<HTMLInputElement>(null);
+  const addressNumber = useRef<HTMLInputElement>(null);
+  const addressStreet = useRef<HTMLInputElement>(null);
+  const addressComplement = useRef<HTMLInputElement>(null);
+  const addressDistrict = useRef<HTMLInputElement>(null);
+  const addressCity = useRef<HTMLInputElement>(null);
+  const addressState = useRef<HTMLInputElement>(null);
 
+  const [addressZipState, setAddressZipState] = useState('');
   const [popup, setPopup] = useState<any>({});
 
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [addressZip, setAddressZip] = useState('');
-  const [addressNumber, setAddressNumber] = useState('');
-  const [addressStreet, setAddressStreet] = useState('');
-  const [addressComplement, setAddressComplement] = useState('');
-  const [addressDistrict, setAddressDistrict] = useState('');
-  const [addressCity, setAddressCity] = useState('');
-  const [addressState, setAddressState] = useState('');
 
   const [sending, setSending] = useState(false);
   const [hasZip, setHasZip] = useState(false);
+  const [sent, setSent] = useState(false);
 
   useEffect(() => {
-    nameInput.current.focus();
+    name.current.focus();
   }, [])
 
   useEffect(() => {
     getZipFromApi()
-  }, [addressZip])
+  }, [addressZipState])
 
   async function getZipFromApi() {
-    const zipCode = addressZip.replace(/[^\d]/g, '');
+    const zipCode = addressZip.current.value.replace(/[^\d]/g, '');
 
     if (zipCode.length === 8) {
       const result = await fetch(`https://viacep.com.br/ws/${zipCode}/json`, {
@@ -44,32 +45,41 @@ export default function Form() {
 
       if (result.erro) {
         setHasZip(true)
+        addressStreet.current.value = '';
+        addressDistrict.current.value = '';
+        addressState.current.value = '';
+        addressCity.current.value = ''
+        showPopup(
+          'Cep não encontrado',
+          'Tente outro cep',
+          'erro'
+        )
       } else {
-        console.log(result)
+        setHasZip(false)
         const { logradouro, bairro, uf, localidade } = result;
-        setAddressStreet(logradouro);
-        setAddressDistrict(bairro);
-        setAddressState(uf);
-        setAddressCity(localidade)
+        addressStreet.current.value = logradouro;
+        addressDistrict.current.value = bairro;
+        addressState.current.value = uf;
+        addressCity.current.value = localidade;
       }
     }
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
-    const sanitizedAddressZip = addressZip.replace(/[^\d]/g, '');
-    const sanitizedPhone = phone.replace(/[^\d]/g, '');
+    const sanitizedAddressZip = addressZip.current.value.replace(/[^\d]/g, '');
+    const sanitizedPhone = phone.current.value.replace(/[^\d]/g, '');
     const body = {
-      name,
-      email,
+      name: name.current.value,
+      email: email.current.value,
       phone: sanitizedPhone,
       addressZip: sanitizedAddressZip,
-      addressNumber,
-      addressStreet,
-      addressComplement,
-      addressDistrict,
-      addressCity,
-      addressState
+      addressNumber: addressNumber.current.value,
+      addressStreet: addressStreet.current.value,
+      addressComplement: addressComplement.current.value,
+      addressDistrict: addressDistrict.current.value,
+      addressCity: addressCity.current.value,
+      addressState: addressState.current.value
     };
 
     setSending(true);
@@ -80,12 +90,10 @@ export default function Form() {
       body: JSON.stringify(body),
     }).then(response => {
       if (response.status === 200) {
-        showPopup(
-          'Sucesso',
-          'Muito bom! Você receberá seus adesivos em alguns dias!',
-          'success'
-        )
+        setSent(true)
       } else if (response.status === 400) {
+        
+      } else {
         showPopup(
           'Erro',
           'Por favo tente mais tarde',
@@ -101,32 +109,28 @@ export default function Form() {
 
   }
 
-  function showPopup(message, title, type) {
+  function showPopup(title, message, type) {
     setPopup({ title, message, show: true, type });
     setTimeout(() => {
       setPopup({ show: false });
     }, 5000)
   }
+  if (sent) {
+    return (
+      <h1>Muito bom! Você receberá seus adesivos em alguns dias</h1>
+    )
+  }
 
   return (
     <>
-      <Popup
-        title={popup.title}
-        message={popup.message}
-        type={popup.type}
-        show={popup.show}
-      />
-
       <FormContainer onSubmit={handleSubmit}>
         <h3>Dados Pessoais</h3>
         <InputContainer>
-          <label htmlFor='name'>Name</label>
+          <label htmlFor='name'>Nome</label>
           <input
             name='name'
             type='text'
-            value={name}
-            onChange={e => setName(e.target.value)}
-            ref={nameInput}
+            ref={name}
             required />
         </InputContainer>
         <InputGroup>
@@ -135,8 +139,7 @@ export default function Form() {
             <input
               name='email'
               type='email'
-              value={email}
-              onChange={e => setEmail(e.target.value)}
+              ref={email}
               required
             />
           </InputContainer>
@@ -145,8 +148,7 @@ export default function Form() {
             <InputMask
               mask="(99) 99999-9999"
               name='phone'
-              value={phone}
-              onChange={e => setPhone(e.target.value)}
+              ref={phone}
               required
             ></InputMask>
           </InputContainer>
@@ -159,8 +161,8 @@ export default function Form() {
             mask="99999-999"
             name='address-zip'
             type='text'
-            value={addressZip}
-            onChange={(e) => setAddressZip(e.target.value)}
+            ref={addressZip}
+            onChange={(e) => setAddressZipState(e.target.value)}
             required
           />
         </InputContainer>
@@ -170,8 +172,7 @@ export default function Form() {
             <input
               name='address-street'
               type='text'
-              value={addressStreet}
-              onChange={e => setAddressStreet(e.target.value)}
+              ref={addressStreet}
               disabled={!hasZip}
               required
             />
@@ -180,9 +181,8 @@ export default function Form() {
             <label htmlFor='address-number'>Número</label>
             <input
               name='address-number'
-              type='text'
-              value={addressNumber}
-              onChange={e => setAddressNumber(e.target.value)}
+              type='number'
+              ref={addressNumber}
               required
 
             />
@@ -194,8 +194,7 @@ export default function Form() {
             <input
               name='address-complement'
               type='text'
-              value={addressComplement}
-              onChange={e => setAddressComplement(e.target.value)}
+              ref={addressComplement}
               required
             />
           </InputContainer>
@@ -204,8 +203,7 @@ export default function Form() {
             <input
               name='address-district'
               type='text'
-              value={addressDistrict}
-              onChange={e => setAddressDistrict(e.target.value)}
+              ref={addressDistrict}
               disabled={!hasZip}
               required
             />
@@ -217,8 +215,7 @@ export default function Form() {
             <input
               name='address-city'
               type='text'
-              value={addressCity}
-              onChange={e => setAddressCity(e.target.value)}
+              ref={addressCity}
               disabled={!hasZip}
               required
             />
@@ -228,8 +225,7 @@ export default function Form() {
             <input
               name='address-state'
               type='text'
-              value={addressState}
-              onChange={e => setAddressState(e.target.value)}
+              ref={addressState}
               disabled={!hasZip}
               required
             />
@@ -237,6 +233,12 @@ export default function Form() {
         </InputGroup>
         <button id='submit' type='submit' disabled={sending} >Enviar </button>
       </FormContainer>
+      <Popup
+        title={popup.title}
+        message={popup.message}
+        type={popup.type}
+        show={popup.show}
+      />
     </>
   )
 }

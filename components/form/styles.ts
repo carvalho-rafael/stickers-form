@@ -7,9 +7,20 @@ export const FormContainer = styled.form`
     padding: 1rem;
     margin: auto;
 
+    h3 {
+        color: #444;
+    }
+
     button[type="submit"]{
-        float: right;
-        padding: 1rem 1.5rem;
+        width: 100%;
+
+        padding: 1rem;
+        margin-top: .5rem;
+
+        color: #fff;
+        background: #023047;
+        font-size: inherit;
+        cursor: pointer;
     }
 `
 
@@ -17,10 +28,6 @@ export const InputContainer = styled.div`
     display: flex;
     flex-direction: column;
     margin-bottom: 1rem;
-
-    label {
-        color: red;
-    }
 
     input[name="email"] {
         width: 400px;
@@ -32,6 +39,10 @@ export const InputContainer = styled.div`
 
     input[name="address-street"] {
         width: 500px;
+    }
+
+    input[name="address-zip"] {
+        width: min-content;
     }
 
     input[name="address-number"] {
@@ -57,6 +68,8 @@ export const InputContainer = styled.div`
         width: 100%;
 
         padding: .5rem;
+
+        border-radius: 5px;
         font-size: inherit;
 
         @media(max-width: 800px) {
