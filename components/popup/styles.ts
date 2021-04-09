@@ -11,17 +11,13 @@ export const PopPupContainer = styled.div<{ type?: string }>`
     right: 30px;
 
     justify-content: space-evenly;
-    background: ${props => props.type === 'erro' ? "red" : "blue"};
+    background: ${props => props.type === 'erro' ? "#e23636" : "#4a90e2"};
     color: white;
 
     border-radius: .5rem;
     animation: fadein 1s ease-out;
 
     z-index: 999;
-
-    &.erro {
-        background: red;
-    }
 
     h3 {
         margin: 0;
