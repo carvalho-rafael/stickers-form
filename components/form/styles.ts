@@ -6,6 +6,11 @@ export const FormContainer = styled.form`
 
     padding: 1rem;
     margin: auto;
+
+    button[type="submit"]{
+        float: right;
+        padding: 1rem 1.5rem;
+    }
 `
 
 export const InputContainer = styled.div`
