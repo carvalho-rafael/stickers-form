@@ -1,10 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { FormContainer, InputContainer, InputGroup } from './styles'
+import { FormContainer, FormTitle, InputContainer, InputGroup, SuccessMessage } from './styles'
 
 import InputMask from "react-input-mask";
 import Popup, { PopupProps } from '../popup';
 
 export default function Form() {
+  const form = useRef<HTMLFormElement>(null);
+
   const name = useRef<HTMLInputElement>(null);
   const email = useRef<HTMLInputElement>(null);
   const phone = useRef<HTMLInputElement>(null);
@@ -26,11 +28,13 @@ export default function Form() {
   const [popup, setPopup] = useState(false);
 
   useEffect(() => {
-    name.current.focus();
+    if (name.current)
+      name.current.focus();
   }, [])
 
   useEffect(() => {
-    getZipFromApi()
+    if (addressZipState)
+      getZipFromApi()
   }, [addressZipState])
 
   async function getZipFromApi() {
@@ -51,8 +55,8 @@ export default function Form() {
         addressState.current.value = '';
         addressCity.current.value = ''
         showPopup(
-          'Cep não encontrado',
-          'Tente outro cep',
+          'Cep não encontrado :(',
+          'Tente outro ou preencha os campos manualmente',
           'erro'
         )
       } else {
@@ -96,20 +100,39 @@ export default function Form() {
         body,
         status: response.status
       }
-    }
-    )
+    })
 
     if (result.status === 200) {
       setSent(true)
+
     } else if (result.status === 400) {
+      const labels = document.getElementsByTagName('label')
+
+      for (let item of Array.from(labels)) {
+        item.firstElementChild.classList.remove('error')
+      }
+
       result.body.forEach(field => {
-        this.refs[field].current.value = 33
+
+        for (let item of Array.from(labels))
+          if (item.htmlFor === field.field) {
+            const errorElement = item.firstElementChild
+            errorElement.classList.add('error')
+            errorElement.innerHTML = field.error
+
+          }
       });
+
+      showPopup(
+        'Ops :(',
+        'Parece que existem campos incorretos. Tente novmente',
+        'erro'
+      )
 
     } else {
       showPopup(
-        'Erro',
-        'Por favo tente mais tarde',
+        'Ops :(',
+        'Por favo tente novamente mais tarde',
         'erro'
       )
     }
@@ -130,17 +153,20 @@ export default function Form() {
 
   if (sent) {
     return (
-      <h1>Muito bom! Você receberá seus adesivos em alguns dias</h1>
+      <SuccessMessage>
+        <h1>Muito bom!</h1>
+        <p>Você receberá seus adesivos em alguns dias</p>
+      </SuccessMessage>
     )
   }
 
   return (
     <>
-      <h1>Formulário de Adesivos</h1>
-      <FormContainer onSubmit={handleSubmit}>
+      <FormTitle>Formulário de Adesivos</FormTitle>
+      <FormContainer onSubmit={handleSubmit} ref={form}>
         <h3>Dados Pessoais</h3>
         <InputContainer>
-          <label htmlFor='name'>Nome</label>
+          <label htmlFor='name'>Nome* <span></span></label>
           <input
             name='name'
             type='text'
@@ -149,7 +175,7 @@ export default function Form() {
         </InputContainer>
         <InputGroup>
           <InputContainer>
-            <label htmlFor='email'>Email</label>
+            <label htmlFor='email'>Email* <span></span></label>
             <input
               name='email'
               type='email'
@@ -158,7 +184,7 @@ export default function Form() {
             />
           </InputContainer>
           <InputContainer>
-            <label htmlFor='phone'>Phone</label>
+            <label htmlFor='phone'>Phone* <span></span></label>
             <InputMask
               mask="(99) 99999-9999"
               name='phone'
@@ -170,10 +196,10 @@ export default function Form() {
 
         <h3>Endereço</h3>
         <InputContainer>
-          <label htmlFor='address-zip'>CEP</label>
+          <label htmlFor='addressZip'>CEP* <span></span></label>
           <InputMask
             mask="99999-999"
-            name='address-zip'
+            name='addressZip'
             type='text'
             ref={addressZip}
             onChange={(e) => setAddressZipState(e.target.value)}
@@ -182,9 +208,9 @@ export default function Form() {
         </InputContainer>
         <InputGroup>
           <InputContainer>
-            <label htmlFor='address-street'>Rua</label>
+            <label htmlFor='addressStreet'>Rua* <span></span></label>
             <input
-              name='address-street'
+              name='addressStreet'
               type='text'
               ref={addressStreet}
               disabled={!hasZip}
@@ -192,9 +218,9 @@ export default function Form() {
             />
           </InputContainer>
           <InputContainer>
-            <label htmlFor='address-number'>Número</label>
+            <label htmlFor='addressNumber'>Número* <span></span></label>
             <input
-              name='address-number'
+              name='addressNumber'
               type='number'
               ref={addressNumber}
               required
@@ -204,18 +230,18 @@ export default function Form() {
         </InputGroup>
         <InputGroup>
           <InputContainer>
-            <label htmlFor='address-complement'>Complemento</label>
+            <label htmlFor='addressComplement'>Complemento* <span></span></label>
             <input
-              name='address-complement'
+              name='addressComplement'
               type='text'
               ref={addressComplement}
               required
             />
           </InputContainer>
           <InputContainer>
-            <label htmlFor='address-district'>Bairro</label>
+            <label htmlFor='addressDistrict'>Bairro* <span></span></label>
             <input
-              name='address-district'
+              name='addressDistrict'
               type='text'
               ref={addressDistrict}
               disabled={!hasZip}
@@ -225,9 +251,9 @@ export default function Form() {
         </InputGroup>
         <InputGroup>
           <InputContainer>
-            <label htmlFor='address-city'>Cidade</label>
+            <label htmlFor='addressCity'>Cidade* <span></span></label>
             <input
-              name='address-city'
+              name='addressCity'
               type='text'
               ref={addressCity}
               disabled={!hasZip}
@@ -235,9 +261,9 @@ export default function Form() {
             />
           </InputContainer>
           <InputContainer>
-            <label htmlFor='address-state'>Estado</label>
+            <label htmlFor='addressState'>Estado* <span></span></label>
             <input
-              name='address-state'
+              name='addressState'
               type='text'
               ref={addressState}
               disabled={!hasZip}
@@ -245,7 +271,9 @@ export default function Form() {
             />
           </InputContainer>
         </InputGroup>
-        <button id='submit' type='submit' disabled={sending} >Enviar </button>
+        <button id='submit' type='submit' disabled={sending} >
+          {sending? 'Loading': 'Enviar'}
+        </button>
       </FormContainer>
 
       {popup && (

@@ -1,5 +1,10 @@
 import styled from 'styled-components'
 
+export const FormTitle = styled.h1`
+    text-align: center;
+    color: #023047;
+`
+
 export const FormContainer = styled.form`
     width: 100%;
     max-width: 700px;
@@ -21,6 +26,10 @@ export const FormContainer = styled.form`
         background: #023047;
         font-size: inherit;
         cursor: pointer;
+
+        :disabled {
+            background: #010e15;
+        }
     }
 `
 
@@ -28,6 +37,20 @@ export const InputContainer = styled.div`
     display: flex;
     flex-direction: column;
     margin-bottom: 1rem;
+
+    label {
+        margin-bottom: .5rem;
+
+        span{
+        font-size:12px;
+        display: none;
+
+        &.error {
+            color: red;
+            display: inline;
+        }
+        }
+    }
 
     input[name="email"] {
         width: 400px;
@@ -37,30 +60,30 @@ export const InputContainer = styled.div`
         width: 250px;
     }
 
-    input[name="address-street"] {
+    input[name="addressStreet"] {
         width: 500px;
     }
 
-    input[name="address-zip"] {
+    input[name="addressZip"] {
         width: min-content;
     }
 
-    input[name="address-number"] {
+    input[name="addressNumber"] {
         width: 150px;
     }
 
-    input[name="address-complement"] {
+    input[name="addressComplement"] {
         width: 400px;
     }
 
-    input[name="address-district"] {
+    input[name="addressDistrict"] {
         width: 250px;
     }
-    input[name="address-city"] {
+    input[name="addressCity"] {
         width: 325px;
     }
 
-    input[name="address-state"] {
+    input[name="addressState"] {
         width: 325px;
     }
 
@@ -88,4 +111,15 @@ export const InputGroup = styled.div`
         width:100%;
         flex-direction: column;
     }    
+`
+
+export const SuccessMessage = styled.div`
+    h1, p {
+        text-align: center;
+        color: #023047;
+    }
+
+    p {
+        font-size: 24px;
+    }
 `
