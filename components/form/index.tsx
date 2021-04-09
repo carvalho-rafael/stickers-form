@@ -14,7 +14,7 @@ export default function Form() {
   const [phone, setPhone] = useState('');
   const [addressZip, setAddressZip] = useState('');
   const [addressNumber, setAddressNumber] = useState('');
-  const [addresStreet, setAddressStreet] = useState('');
+  const [addressStreet, setAddressStreet] = useState('');
   const [addressComplement, setAddressComplement] = useState('');
   const [addressDistrict, setAddressDistrict] = useState('');
   const [addressCity, setAddressCity] = useState('');
@@ -57,14 +57,15 @@ export default function Form() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-
+    const sanitizedAddressZip = addressZip.replace(/[^\d]/g, '');
+    const sanitizedPhone = phone.replace(/[^\d]/g, '');
     const body = {
       name,
       email,
-      phone,
-      addressZip,
+      phone: sanitizedPhone,
+      addressZip: sanitizedAddressZip,
       addressNumber,
-      addresStreet,
+      addressStreet,
       addressComplement,
       addressDistrict,
       addressCity,
@@ -73,8 +74,8 @@ export default function Form() {
 
     setSending(true);
 
-    const result = await fetch(` https://simple-api-selection.herokuapp.com/submit/`, {
-      method: 'GET',
+    const result = await fetch('https://simple-api-selection.herokuapp.com/submit', {
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     }).then(response => {
@@ -83,14 +84,14 @@ export default function Form() {
           'Sucesso',
           'Muito bom! Você receberá seus adesivos em alguns dias!',
           'success'
-      )
-    } else if (response.status === 400) {
-      showPopup(
-        'Erro',
-        'Por favo tente mais tarde',
-        'erro'
-    )  
-    }
+        )
+      } else if (response.status === 400) {
+        showPopup(
+          'Erro',
+          'Por favo tente mais tarde',
+          'erro'
+        )
+      }
       return response.json();
     })
 
@@ -169,7 +170,7 @@ export default function Form() {
             <input
               name='address-street'
               type='text'
-              value={addresStreet}
+              value={addressStreet}
               onChange={e => setAddressStreet(e.target.value)}
               disabled={!hasZip}
               required
