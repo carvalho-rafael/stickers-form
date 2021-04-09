@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { FormContainer, InputContainer, InputGroup } from './styles'
 
 import InputMask from "react-input-mask";
-import Popup from '../popup';
+import Popup, { PopupProps } from '../popup';
 
 export default function Form() {
   const name = useRef<HTMLInputElement>(null);
@@ -17,12 +17,13 @@ export default function Form() {
   const addressState = useRef<HTMLInputElement>(null);
 
   const [addressZipState, setAddressZipState] = useState('');
-  const [popup, setPopup] = useState<any>({});
-
+  const [hasZip, setHasZip] = useState(false);
 
   const [sending, setSending] = useState(false);
-  const [hasZip, setHasZip] = useState(false);
   const [sent, setSent] = useState(false);
+
+  const [popupProps, setPopupProps] = useState<PopupProps>();
+  const [popup, setPopup] = useState(false);
 
   useEffect(() => {
     name.current.focus();
@@ -88,20 +89,30 @@ export default function Form() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
-    }).then(response => {
-      if (response.status === 200) {
-        setSent(true)
-      } else if (response.status === 400) {
-        
-      } else {
-        showPopup(
-          'Erro',
-          'Por favo tente mais tarde',
-          'erro'
-        )
+    }).then(async response => {
+      const body = await response.json()
+
+      return {
+        body,
+        status: response.status
       }
-      return response.json();
-    })
+    }
+    )
+
+    if (result.status === 200) {
+      setSent(true)
+    } else if (result.status === 400) {
+      result.body.forEach(field => {
+        this.refs[field].current.value = 33
+      });
+
+    } else {
+      showPopup(
+        'Erro',
+        'Por favo tente mais tarde',
+        'erro'
+      )
+    }
 
     setSending(false);
 
@@ -110,11 +121,13 @@ export default function Form() {
   }
 
   function showPopup(title, message, type) {
-    setPopup({ title, message, show: true, type });
+    setPopupProps({ title, message, type });
+    setPopup(true);
     setTimeout(() => {
-      setPopup({ show: false });
+      setPopup(false)
     }, 5000)
   }
+
   if (sent) {
     return (
       <h1>Muito bom! Você receberá seus adesivos em alguns dias</h1>
@@ -123,6 +136,7 @@ export default function Form() {
 
   return (
     <>
+      <h1>Formulário de Adesivos</h1>
       <FormContainer onSubmit={handleSubmit}>
         <h3>Dados Pessoais</h3>
         <InputContainer>
@@ -233,12 +247,14 @@ export default function Form() {
         </InputGroup>
         <button id='submit' type='submit' disabled={sending} >Enviar </button>
       </FormContainer>
-      <Popup
-        title={popup.title}
-        message={popup.message}
-        type={popup.type}
-        show={popup.show}
-      />
+
+      {popup && (
+        <Popup
+          title={popupProps.title}
+          message={popupProps.message}
+          type={popupProps.type}
+        />
+      )}
     </>
   )
 }
