@@ -70,5 +70,5 @@ export const InputContainer = styled.div`
 `
 
 export const ErrorMessage = styled.span`
-    background: red;
+    color: red;
 `

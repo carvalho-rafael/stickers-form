@@ -24,11 +24,19 @@ export const FormContainer = styled.form`
 
         color: #fff;
         background: #023047;
+        border-radius: 5px;
         font-size: inherit;
+        font-weight: bold;
+
         cursor: pointer;
 
         :disabled {
             background: #010e15;
+        }
+
+        :hover {
+            background: #010e15;
+            transition: all .2s;
         }
     }
 `
@@ -51,5 +59,24 @@ export const SuccessMessage = styled.div`
 
     p {
         font-size: 24px;
+    }
+
+    button{
+        display: block;
+        padding: 1rem;
+        margin: auto;
+
+        color: #fff;
+        background: #023047;
+        cursor: pointer;
+
+        border-radius: 5px;
+        font-size: inherit;
+        font-weight: bold;
+
+        :hover {
+            background: #010e15;
+            transition: all .2s;
+        }
     }
 `

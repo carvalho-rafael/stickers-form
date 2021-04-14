@@ -4,8 +4,10 @@ import { FormContainer, FormTitle, InputGroup, SuccessMessage } from './styles'
 import Popup, { PopupProps } from '../popup';
 import Input from '../input';
 
+interface FormFieldsErrors {
+  [key: string]: string
+}
 export default function Form() {
-  const form = useRef<HTMLFormElement>(null);
 
   const name = useRef<HTMLInputElement>(null);
   const email = useRef<HTMLInputElement>(null);
@@ -18,8 +20,10 @@ export default function Form() {
   const addressCity = useRef<HTMLInputElement>(null);
   const addressState = useRef<HTMLInputElement>(null);
 
+  const [errors, setErrors] = useState<FormFieldsErrors>({});
+
   const [addressZipState, setAddressZipState] = useState('');
-  const [hasZip, setHasZip] = useState(false);
+  const [hasZip, setHasZip] = useState(true);
 
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -49,7 +53,7 @@ export default function Form() {
       })
 
       if (result.erro) {
-        setHasZip(true)
+        setHasZip(false)
         addressStreet.current.value = '';
         addressDistrict.current.value = '';
         addressState.current.value = '';
@@ -60,7 +64,7 @@ export default function Form() {
           'erro'
         )
       } else {
-        setHasZip(false)
+        setHasZip(true)
         const { logradouro, bairro, uf, localidade } = result;
         addressStreet.current.value = logradouro;
         addressDistrict.current.value = bairro;
@@ -94,37 +98,31 @@ export default function Form() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     }).then(async response => {
-      const body = await response.json()
+      if (response.status === 200) {
+        setSent(true)
+        setErrors({})
+      } else if (response.status === 400) {
+        const fields = await response.json()
+        const error = {};
+        fields.forEach(field => {
+          error[field.field] = field.error
+        })
+        setErrors(error)
 
-      return {
-        body,
-        status: response.status
+        showPopup(
+          'Ops :(',
+          'Parece que existem campos incorretos. Tente novmente',
+          'erro'
+        )
+      } else {
+        showPopup(
+          'Ops :(',
+          'Por favor tente novamente mais tarde',
+          'erro'
+        )
       }
     })
-
-    if (result.status === 200) {
-      setSent(true)
-
-    } else if (result.status === 400) {
-      console.log(result)
-      showPopup(
-        'Ops :(',
-        'Parece que existem campos incorretos. Tente novmente',
-        'erro'
-      )
-
-    } else {
-      showPopup(
-        'Ops :(',
-        'Por favor tente novamente mais tarde',
-        'erro'
-      )
-    }
-
     setSending(false);
-
-    console.log(result)
-
   }
 
   function showPopup(title, message, type) {
@@ -140,6 +138,7 @@ export default function Form() {
       <SuccessMessage>
         <h1>Muito bom!</h1>
         <p>Você receberá seus adesivos em alguns dias</p>
+        <button onClick={()  => setSent(false)}>Solicitar  outro</button>
       </SuccessMessage>
     )
   }
@@ -147,29 +146,29 @@ export default function Form() {
   return (
     <>
       <FormTitle>Formulário de Adesivos</FormTitle>
-      <FormContainer onSubmit={handleSubmit} ref={form}>
+      <FormContainer onSubmit={handleSubmit} >
         <h3>Dados Pessoais</h3>
-        <Input error={'rr'} type="text" name="name" ref={name} required />
+        <Input error={errors.name} type="text" name="name" ref={name} required />
         <InputGroup>
-          <Input error={'do'} type="text" name="email" ref={email} required />
-          <Input error={'do'} type="text" name='phone' mask="(99) 99999-9999" ref={phone} required />
+          <Input error={errors.email} type="text" name="email" ref={email} required />
+          <Input error={errors.phone} type="tel" name='phone' mask="(99) 99999-9999" ref={phone} required />
         </InputGroup>
 
         <h3>Endereço</h3>
-        <Input error={'do'} type="text" name='addressZip' mask="99999-999" ref={addressZip} onChange={(e) => setAddressZipState(e.target.value)} required />
+        <Input error={errors.addresszip} type="text" name='addressZip' mask="99999-999" ref={addressZip} onChange={(e) => setAddressZipState(e.target.value)} required />
         <InputGroup>
-          <Input error={'do'} type="text" name="addressStreet" ref={addressStreet} required />
-          <Input error={'do'} type="text" name="addressNumber" ref={addressNumber} required />
+          <Input error={errors.addressStreet} type="text" name="addressStreet" disabled={hasZip} ref={addressStreet} required />
+          <Input error={errors.addressNumber} type="number" name="addressNumber" ref={addressNumber} required />
         </InputGroup>
         <InputGroup>
-        <Input error={'do'} type="text" name="addressComprement" ref={addressComplement} required />
+          <Input error={errors.addressComplement} type="text" name="addressComplement" ref={addressComplement} required />
 
-        <Input error={'do'} type="text" name="addressDistrict" ref={addressDistrict} required />
+          <Input error={errors.addressDistrict} type="text" name="addressDistrict" disabled={hasZip} ref={addressDistrict} required />
 
         </InputGroup>
         <InputGroup>
-        <Input error={'do'} type="text" name="addressCity" ref={addressCity} required />
-        <Input error={'do'} type="text" name="addressState" ref={addressState} required />
+          <Input error={errors.addressCity} type="text" name="addressCity" disabled={hasZip} ref={addressCity} required />
+          <Input error={errors.addressState} type="text" name="addressState" disabled={hasZip} ref={addressState} required />
 
         </InputGroup>
         <button id='submit' type='submit' disabled={sending} >
