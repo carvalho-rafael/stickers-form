@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { FormContainer, FormTitle, InputContainer, InputGroup, SuccessMessage } from './styles'
+import { FormContainer, FormTitle, InputGroup, SuccessMessage } from './styles'
 
-import InputMask from "react-input-mask";
 import Popup, { PopupProps } from '../popup';
+import Input from '../input';
 
 export default function Form() {
   const form = useRef<HTMLFormElement>(null);
@@ -106,23 +106,7 @@ export default function Form() {
       setSent(true)
 
     } else if (result.status === 400) {
-      const labels = document.getElementsByTagName('label')
-
-      for (let item of Array.from(labels)) {
-        item.firstElementChild.classList.remove('error')
-      }
-
-      result.body.forEach(field => {
-
-        for (let item of Array.from(labels))
-          if (item.htmlFor === field.field) {
-            const errorElement = item.firstElementChild
-            errorElement.classList.add('error')
-            errorElement.innerHTML = field.error
-
-          }
-      });
-
+      console.log(result)
       showPopup(
         'Ops :(',
         'Parece que existem campos incorretos. Tente novmente',
@@ -132,7 +116,7 @@ export default function Form() {
     } else {
       showPopup(
         'Ops :(',
-        'Por favo tente novamente mais tarde',
+        'Por favor tente novamente mais tarde',
         'erro'
       )
     }
@@ -165,114 +149,31 @@ export default function Form() {
       <FormTitle>Formulário de Adesivos</FormTitle>
       <FormContainer onSubmit={handleSubmit} ref={form}>
         <h3>Dados Pessoais</h3>
-        <InputContainer>
-          <label htmlFor='name'>Nome* <span></span></label>
-          <input
-            name='name'
-            type='text'
-            ref={name}
-            required />
-        </InputContainer>
+        <Input error={'rr'} type="text" name="name" ref={name} required />
         <InputGroup>
-          <InputContainer>
-            <label htmlFor='email'>Email* <span></span></label>
-            <input
-              name='email'
-              type='email'
-              ref={email}
-              required
-            />
-          </InputContainer>
-          <InputContainer>
-            <label htmlFor='phone'>Phone* <span></span></label>
-            <InputMask
-              mask="(99) 99999-9999"
-              name='phone'
-              ref={phone}
-              required
-            ></InputMask>
-          </InputContainer>
+          <Input error={'do'} type="text" name="email" ref={email} required />
+          <Input error={'do'} type="text" name='phone' mask="(99) 99999-9999" ref={phone} required />
         </InputGroup>
 
         <h3>Endereço</h3>
-        <InputContainer>
-          <label htmlFor='addressZip'>CEP* <span></span></label>
-          <InputMask
-            mask="99999-999"
-            name='addressZip'
-            type='text'
-            ref={addressZip}
-            onChange={(e) => setAddressZipState(e.target.value)}
-            required
-          />
-        </InputContainer>
+        <Input error={'do'} type="text" name='addressZip' mask="99999-999" ref={addressZip} onChange={(e) => setAddressZipState(e.target.value)} required />
         <InputGroup>
-          <InputContainer>
-            <label htmlFor='addressStreet'>Rua* <span></span></label>
-            <input
-              name='addressStreet'
-              type='text'
-              ref={addressStreet}
-              disabled={!hasZip}
-              required
-            />
-          </InputContainer>
-          <InputContainer>
-            <label htmlFor='addressNumber'>Número* <span></span></label>
-            <input
-              name='addressNumber'
-              type='number'
-              ref={addressNumber}
-              required
+          <Input error={'do'} type="text" name="addressStreet" ref={addressStreet} required />
+          <Input error={'do'} type="text" name="addressNumber" ref={addressNumber} required />
+        </InputGroup>
+        <InputGroup>
+        <Input error={'do'} type="text" name="addressComprement" ref={addressComplement} required />
 
-            />
-          </InputContainer>
+        <Input error={'do'} type="text" name="addressDistrict" ref={addressDistrict} required />
+
         </InputGroup>
         <InputGroup>
-          <InputContainer>
-            <label htmlFor='addressComplement'>Complemento* <span></span></label>
-            <input
-              name='addressComplement'
-              type='text'
-              ref={addressComplement}
-              required
-            />
-          </InputContainer>
-          <InputContainer>
-            <label htmlFor='addressDistrict'>Bairro* <span></span></label>
-            <input
-              name='addressDistrict'
-              type='text'
-              ref={addressDistrict}
-              disabled={!hasZip}
-              required
-            />
-          </InputContainer>
-        </InputGroup>
-        <InputGroup>
-          <InputContainer>
-            <label htmlFor='addressCity'>Cidade* <span></span></label>
-            <input
-              name='addressCity'
-              type='text'
-              ref={addressCity}
-              disabled={!hasZip}
-              required
-            />
-          </InputContainer>
-          <InputContainer>
-            <label htmlFor='addressState'>Estado* <span></span></label>
-            <input
-              name='addressState'
-              type='text'
-              ref={addressState}
-              disabled={!hasZip}
-              required
-            />
-          </InputContainer>
+        <Input error={'do'} type="text" name="addressCity" ref={addressCity} required />
+        <Input error={'do'} type="text" name="addressState" ref={addressState} required />
+
         </InputGroup>
         <button id='submit' type='submit' disabled={sending} >
-          {sending? 'Loading': 'Enviar'}
+          {sending ? 'Loading' : 'Enviar'}
         </button>
       </FormContainer>
 
