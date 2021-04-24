@@ -5,8 +5,7 @@ html,
     body {
     padding: 0;
     margin: 0;
-    font-family: -apple - system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
-        Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans - serif;
+    font-family: 'Titillium Web', sans-serif;
     width: 100%;
     color: #000;
     background: #F9F9F9;

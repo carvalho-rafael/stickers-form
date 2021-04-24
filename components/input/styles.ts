@@ -55,12 +55,14 @@ export const InputContainer = styled.div`
         width: 325px;
     }
 
-    input {
+    input {        
         width: 100%;
 
         padding: .5rem;
 
         border-radius: 5px;
+        
+        font-family: inherit;
         font-size: inherit;
 
         @media(max-width: 800px) {
