@@ -1,12 +1,12 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { FormContainer, FormTitle, InputGroup, SuccessMessage } from './styles'
+import React, { MutableRefObject, useEffect, useRef, useState } from 'react';
+import { FormContainer, FormTitle, InputGroup, SuccessMessage } from './styles';
 
-import Popup, { PopupProps } from '../popup';
 import Input from '../input';
 
-interface FormFieldsErrors {
-  [key: string]: string
-}
+import * as yup from 'yup';
+import useFormValidation from '../../hooks/useFormValidation';
+import usePopup from '../popup';
+
 export default function Form() {
 
   const name = useRef<HTMLInputElement>(null);
@@ -20,7 +20,7 @@ export default function Form() {
   const addressCity = useRef<HTMLInputElement>(null);
   const addressState = useRef<HTMLInputElement>(null);
 
-  const [errors, setErrors] = useState<FormFieldsErrors>({});
+  const { errors, setErrors, validate } = useFormValidation();
 
   const [addressZipState, setAddressZipState] = useState('');
   const [hasZip, setHasZip] = useState(true);
@@ -28,8 +28,7 @@ export default function Form() {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
 
-  const [popupProps, setPopupProps] = useState<PopupProps>();
-  const [popup, setPopup] = useState(false);
+  const { Popup, showPopup } = usePopup();
 
   useEffect(() => {
     if (name.current)
@@ -41,8 +40,21 @@ export default function Form() {
       getZipFromApi()
   }, [addressZipState])
 
+  const formSchema = yup.object().shape({
+    name: yup.string().required('Nome obrigatório').min(7, 'O nome deve ter mais que 7 caracteres'),
+    email: yup.string().required('E-mail obrigatório').email('Digite um email válido'),
+    phone: yup.string().required('Telefone obrigatório'),
+    addressZip: yup.string().required('CEP obrigatório'),
+    addressStreet: yup.string().required('Logradouro obrigatório'),
+    addressNumber: yup.number().typeError('Digite um número').positive('Favor digitar apenas números positivos').required('Número obrigatório'),
+    addressComplement: yup.string().required('Complemento obrigatório'),
+    addressDistrict: yup.string().required('Bairro obrigatório'),
+    addressCity: yup.string().required('Cidade obrigatória'),
+    addressState: yup.string().required('Estado obrigatório'),
+  });
+
   async function getZipFromApi() {
-    const zipCode = addressZip.current.value.replace(/[^\d]/g, '');
+    let zipCode = addressZip.current.value.replace(/[^\d]/g, '');
 
     if (zipCode.length === 8) {
       const result = await fetch(`https://viacep.com.br/ws/${zipCode}/json`, {
@@ -58,10 +70,11 @@ export default function Form() {
         addressDistrict.current.value = '';
         addressState.current.value = '';
         addressCity.current.value = ''
-        showPopup(
-          'Cep não encontrado :(',
-          'Tente outro ou preencha os campos manualmente',
-          'erro'
+        showPopup({
+          title: 'Cep não encontrado :(',
+          message: 'Tente outro ou preencha os campos manualmente',
+          type: 'erro'
+        }
         )
       } else {
         setHasZip(true)
@@ -78,6 +91,7 @@ export default function Form() {
     e.preventDefault();
     const sanitizedAddressZip = addressZip.current.value.replace(/[^\d]/g, '');
     const sanitizedPhone = phone.current.value.replace(/[^\d]/g, '');
+
     const body = {
       name: name.current.value,
       email: email.current.value,
@@ -91,46 +105,38 @@ export default function Form() {
       addressState: addressState.current.value
     };
 
+    const isValido = validate(body, formSchema, [name, email, phone, addressZip, addressNumber, addressStreet, addressComplement, addressDistrict, addressCity, addressState])
+
+    if (!isValido) return;
+
     setSending(true);
 
-    const result = await fetch('https://simple-api-selection.herokuapp.com/submit', {
+    await fetch('https://simple-api-selection.herokuapp.com/submit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     }).then(async response => {
       if (response.status === 200) {
         setSent(true)
-        setErrors({})
       } else if (response.status === 400) {
-        const fields = await response.json()
-        const error = {};
-        fields.forEach(field => {
-          error[field.field] = field.error
-        })
-        setErrors(error)
 
-        showPopup(
-          'Ops :(',
-          'Parece que existem campos incorretos. Tente novmente',
-          'erro'
+        showPopup({
+          title: 'Ops :(',
+          message: 'Parece que existem campos incorretos. Tente novmente',
+          type: 'erro'
+        }
         )
       } else {
-        showPopup(
-          'Ops :(',
-          'Por favor tente novamente mais tarde',
-          'erro'
+        showPopup({
+          title: 'Ops :(',
+          message: 'Por favor tente novamente mais tarde',
+          type: 'erro'
+        }
         )
       }
     })
-    setSending(false);
-  }
 
-  function showPopup(title, message, type) {
-    setPopupProps({ title, message, type });
-    setPopup(true);
-    setTimeout(() => {
-      setPopup(false)
-    }, 5000)
+    setSending(false);
   }
 
   if (sent) {
@@ -138,7 +144,7 @@ export default function Form() {
       <SuccessMessage>
         <h1>Muito bom!</h1>
         <p>Você receberá seus adesivos em alguns dias</p>
-        <button onClick={()  => setSent(false)}>Solicitar  outro</button>
+        <button onClick={() => setSent(false)}>Solicitar  outro</button>
       </SuccessMessage>
     )
   }
@@ -148,41 +154,30 @@ export default function Form() {
       <FormTitle>Formulário de Adesivos</FormTitle>
       <FormContainer onSubmit={handleSubmit} >
         <h3>Dados Pessoais</h3>
-        <Input error={errors.name} type="text" name="name" ref={name} required />
+        <Input error={errors.name} type="text" name="name" ref={name} />
         <InputGroup>
-          <Input error={errors.email} type="text" name="email" ref={email} required />
-          <Input error={errors.phone} type="tel" name='phone' mask="(99) 99999-9999" ref={phone} required />
+          <Input error={errors.email} type="text" name="email" ref={email} />
+          <Input error={errors.phone} type="text" name='phone' mask="(99) 99999-9999" ref={phone} />
         </InputGroup>
-
         <h3>Endereço</h3>
-        <Input error={errors.addresszip} type="text" name='addressZip' mask="99999-999" ref={addressZip} onChange={(e) => setAddressZipState(e.target.value)} required />
+        <Input error={errors.addressZip} type="text" name='addressZip' mask="99999-999" ref={addressZip} onChange={(e) => setAddressZipState(e.target.value)} />
         <InputGroup>
-          <Input error={errors.addressStreet} type="text" name="addressStreet" disabled={hasZip} ref={addressStreet} required />
-          <Input error={errors.addressNumber} type="number" name="addressNumber" ref={addressNumber} required />
+          <Input error={errors.addressStreet} type="text" name="addressStreet" disabled={hasZip} ref={addressStreet} />
+          <Input error={errors.addressNumber} type="number" name="addressNumber" ref={addressNumber} />
         </InputGroup>
         <InputGroup>
-          <Input error={errors.addressComplement} type="text" name="addressComplement" ref={addressComplement} required />
-
-          <Input error={errors.addressDistrict} type="text" name="addressDistrict" disabled={hasZip} ref={addressDistrict} required />
-
+          <Input error={errors.addressComplement} type="text" name="addressComplement" ref={addressComplement} />
+          <Input error={errors.addressDistrict} type="text" name="addressDistrict" disabled={hasZip} ref={addressDistrict} />
         </InputGroup>
         <InputGroup>
-          <Input error={errors.addressCity} type="text" name="addressCity" disabled={hasZip} ref={addressCity} required />
-          <Input error={errors.addressState} type="text" name="addressState" disabled={hasZip} ref={addressState} required />
-
+          <Input error={errors.addressCity} type="text" name="addressCity" disabled={hasZip} ref={addressCity} />
+          <Input error={errors.addressState} type="text" name="addressState" disabled={hasZip} ref={addressState} />
         </InputGroup>
         <button id='submit' type='submit' disabled={sending} >
           {sending ? 'Loading' : 'Enviar'}
         </button>
       </FormContainer>
-
-      {popup && (
-        <Popup
-          title={popupProps.title}
-          message={popupProps.message}
-          type={popupProps.type}
-        />
-      )}
+      <Popup />
     </>
   )
 }
