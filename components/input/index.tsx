@@ -5,7 +5,7 @@ import { InputContainer, ErrorMessage } from "./styles";
 import InputMask from "react-input-mask";
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
-    error: string | undefined
+    error?: string[]
     mask?: string
 }
 
@@ -14,19 +14,17 @@ const Input: ForwardRefRenderFunction<HTMLInputElement, InputProps> = ({ error, 
         <InputContainer>
             <label htmlFor={rest.name}>{rest.name}</label>
             {rest.name === "phone" || rest.name === "addressZip" ? (
-                <InputMask {...rest} ref={ref} />
+                <InputMask mask='' {...rest}>{inputProps => <input ref={ref} mask='' {...inputProps} />}</InputMask>
             ) : (
                 <input {...rest} ref={ref} />
             )}
-
             {!!error && (
                 <ErrorMessage>
-                    {error}
+                    {error.map(erro => erro)}
                 </ErrorMessage>
             )}
         </InputContainer>
     )
 }
-
 
 export default React.forwardRef(Input)
