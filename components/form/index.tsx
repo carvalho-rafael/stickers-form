@@ -5,10 +5,12 @@ import Input from '../input';
 
 import * as yup from 'yup';
 import useFormValidation from '../../hooks/useFormValidation';
-import usePopup from '../popup';
+
+import usePopup from 'use-popup'
 
 export default function Form() {
 
+  const {} = usePopup()
   const name = useRef<HTMLInputElement>(null);
   const email = useRef<HTMLInputElement>(null);
   const phone = useRef<HTMLInputElement>(null);
@@ -73,7 +75,8 @@ export default function Form() {
         showPopup({
           title: 'Cep não encontrado :(',
           message: 'Tente outro ou preencha os campos manualmente',
-          type: 'erro'
+          color: 'red',
+          seconds: 9
         }
         )
       } else {
@@ -123,14 +126,16 @@ export default function Form() {
         showPopup({
           title: 'Ops :(',
           message: 'Parece que existem campos incorretos. Tente novmente',
-          type: 'erro'
+          color: 'red',
+          seconds: 3
         }
         )
       } else {
         showPopup({
           title: 'Ops :(',
           message: 'Por favor tente novamente mais tarde',
-          type: 'erro'
+          color: 'red',
+          seconds: 3
         }
         )
       }
