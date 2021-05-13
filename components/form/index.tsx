@@ -1,4 +1,4 @@
-import React, { MutableRefObject, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { FormContainer, FormTitle, InputGroup, SuccessMessage } from './styles';
 
 import Input from '../input';
@@ -9,8 +9,6 @@ import useFormValidation from '../../hooks/useFormValidation';
 import usePopup from 'use-popup'
 
 export default function Form() {
-
-  const {} = usePopup()
   const name = useRef<HTMLInputElement>(null);
   const email = useRef<HTMLInputElement>(null);
   const phone = useRef<HTMLInputElement>(null);
@@ -22,7 +20,7 @@ export default function Form() {
   const addressCity = useRef<HTMLInputElement>(null);
   const addressState = useRef<HTMLInputElement>(null);
 
-  const { errors, setErrors, validate } = useFormValidation();
+  const { errors, validate } = useFormValidation();
 
   const [addressZipState, setAddressZipState] = useState('');
   const [hasZip, setHasZip] = useState(true);
@@ -35,6 +33,23 @@ export default function Form() {
   useEffect(() => {
     if (name.current)
       name.current.focus();
+
+    const isValido = validate(
+      formSchema,
+      [
+        name,
+        email,
+        phone,
+        addressZip,
+        addressNumber,
+        addressStreet,
+        addressComplement,
+        addressDistrict,
+        addressCity,
+        addressState
+      ]
+    )
+
   }, [])
 
   useEffect(() => {
@@ -107,10 +122,6 @@ export default function Form() {
       addressCity: addressCity.current.value,
       addressState: addressState.current.value
     };
-
-    const isValido = validate(body, formSchema, [name, email, phone, addressZip, addressNumber, addressStreet, addressComplement, addressDistrict, addressCity, addressState])
-
-    if (!isValido) return;
 
     setSending(true);
 

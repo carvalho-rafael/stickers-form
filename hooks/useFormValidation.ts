@@ -17,54 +17,54 @@ export default function useFormValidation() {
         }
     })
 
-    function validate(body: {}, formSchema: yup.ObjectSchema<any>, refs: MutableRefObject<HTMLInputElement>[]) {
+    useEffect(() => {
+        console.log(errors)
+    }, [errors])
+
+    function validate(formSchema: yup.ObjectSchema<any>, refs: MutableRefObject<HTMLInputElement>[]) {
         formSchemaState = formSchema;
 
-        if(formSchemaState.isValidSync(body)) {
-            return true
-        }
-
-        formSchemaState.validate(body, { abortEarly: false }).catch(err => {
-            _updateErrors(err);
-
-            refs.map(ref => {
-                ref.current.addEventListener('keyup', () => _validateField(refs))
-            })
+        /*         if(formSchemaState.isValidSync(body)) {
+                    return true
+                }
+        
+                formSchemaState.validate(body, { abortEarly: false }).catch(err => {
+                    _updateErrors(err);
+         */
+        refs.map(ref => {
+            ref.current.addEventListener('blur', () => _validateField(ref))
         })
-
+        /*         })
+         */
         return false;
     }
 
-    function _validateField(refs: MutableRefObject<HTMLInputElement>[]) {
+    function _validateField(ref: MutableRefObject<HTMLInputElement>) {
         let body = {}
 
-        refs.forEach(ref => {
-            const refName = ref.current.name
-            let refValue = ref.current.value
+        const refName = ref.current.name
+        let refValue = ref.current.value
 
-            const hasMask = ref.current.hasAttribute('mask');
+        const hasMask = ref.current.hasAttribute('mask');
 
-            if (hasMask) {
-                refValue = refValue.replace(/[^\d]/g, '');
-            }
+        if (hasMask) {
+            refValue = refValue.replace(/[^\d]/g, '');
+        }
 
-            body[refName] = refValue
-        })
+        body[refName] = refValue
 
-        formSchemaState.validate(body, { abortEarly: false }).then(() => {
-            setErrors({});
+        formSchemaState.validateAt(refName, body).then(() => {
+            setErrors(prevState => {
+                const copy = {...prevState}
+                copy[refName] = undefined
+                return copy
+            });
         }).catch(err => {
-            _updateErrors(err);
-        })
-    }
+            const error = {};
+            error[err.path] = err.errors
+            setErrors(prevState => ({...prevState, ...error}));
 
-    function _updateErrors(err) {
-        const newErros = {};
-
-        err.inner.forEach(item => {
-            newErros[item.path] = item.errors
         })
-        setErrors(newErros);
     }
 
     return { errors, setErrors, validate };
